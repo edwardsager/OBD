@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="en" style="height:100%;width:100%">
+
+<head>
+
+	<title>Grok Based Prompt Testing</title>
+
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1 minimum-scale=1" />
+	<meta name="creator" content="ldap.memberOf.CN.svcsearchasservice; wsso.departmentnumber=9T-IT-TQ10" />
+	<meta name="creator" content="wsso.boeingbemsid=2836218" />
+	<meta name="creator" content="ldap.memberOf.CN.svcsearchasservice;"" />
+<meta name=" owner" content="2836218" />
+	<meta name="owner" content="eds.semaphoresuperadministrators & wsso.boeinguspersonstatus=U. S. PERSON; wsso.boeingrelationship.employee" />
+	<meta name="owner" content="memberOf.cn.DL Enterprise Search" />
+	<meta name="owner" content="bemsid=2836218" />
+	<meta name="owner" content="addw.memberOf.name=DL-EnterpriseSearch; eds=enterprisesearch.superusers" />
+	<meta name="viewer" content="wsso.boeinguspersonstatus=U. S. PERSON & wsso.boeingrelationship.employee" />
+	<meta name="viewer" content="wsso.boeinguspersonstatus=U. S. PERSON & wsso.departmentnumber=9T-IT-TQ10" />
+
+	<link rel="stylesheet" href="/jqwidgets.5.7.2/jqwidgets/styles/jqx.base.css" type="text/css" />
+	<link rel="stylesheet" href="/perfect-scrollbar/perfect-scrollbar.css" type="text/css" />
+	<style type="text/css">
+		body {
+			font-family: Helvetica;
+			font-size: 120%;
+			color: #0033A1
+		}
+
+		ul {
+			list-style: none;
+			margin-left: 0;
+			padding-left: 10px;
+			text-indent: 0px;
+		}
+	</style>
+	<script type="text/javascript" src="/jQuery/jquery-3.3.1.js"></script>
+	<script type="text/javascript" src="/jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="/js/sprintf.js"></script>
+	<script type="text/javascript" src="/perfect-scrollbar/perfect-scrollbar.min.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxcore.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxdata.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxdata.export.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxgrid.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxgrid.export.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxmenu.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxgrid.sort.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxgrid.pager.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxgrid.edit.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxgrid.selection.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxgrid.grouping.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxscrollbar.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxbuttons.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxdraw.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxchart.core.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxchart.rangeselector.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxnavigationbar.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxdatetimeinput.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxcalendar.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxtooltip.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/globalization/globalize.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxtree.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxcheckbox.js"></script>
+	<script type="text/javascript" src="/jqwidgets.5.7.2/jqwidgets/jqxdragdrop.js"></script>
+
+	<script type="text/javascript">
+		/* global $ */
+		var session;
+		var query;
+		var impersonator;
+		var thresholdPointsHigh = 8000;
+		var thresholdPointsLow = 1000;
+		var topCount = 20;  // default value for facet count charts like pie charts, etc
+		var defaultHost = window.location.origin;
+
+		function fetchSession () {
+			//console.log('Calling login');
+			// check the query string
+			var url = window.location.href;
+			var paramString = url;
+			//console.log(url);
+			if ( url.match( /\?/ ) ) {
+				var temp = url.split( /\?/ );
+				//console.log(temp);
+				// remove the path
+				// reconstruct the parameters in case there was a ? in the string
+				paramString = temp.join( '?' );
+			}
+			//console.log(paramString);
+			var params = paramString.split( /&/ );
+			var showParams = new Array();
+			//console.log(params);
+			query = new Object();
+			for ( var i in params ) {
+				var kv = params[i].split( /=/ );
+				var k = kv.shift();	// pull the key off the array so the rest is parameters
+				var v = kv.join( '=' );	// in case there was an = in the parameter value
+				// decode the value (v)
+				query[k] = decodeURIComponent( v );
+				if ( !k.match( /boeingSession/i ) ) {
+					showParams.push( k + '=' + v );
+				}
+			}
+			if ( query.checked != null ) {
+				var checkArr = query.checked.split( /,/ );
+				query.checked = new Object();
+				for ( var i in checkArr ) {
+					query.checked[checkArr[i].replace( /^\s+|\s+$/g, '' )] = true;
+				}
+			}
+			console.log( query );
+			// $.ajax({
+			// 	url:'/login/wsso', // fetches the session data using cookies, BOEING_SESSION cookie must exist
+			// 	type:'get',
+			// 	success:function(data){ fetchResult(data); },
+			// 	error:function(one,two){ fetchError(one,two); }
+			// });
+		}
+
+
+		function fetchError ( xhr, message ) {
+			console.log( xhr );
+			console.log( message );
+		}
+
+		function fetchUserError ( xhr, message ) {
+			console.log( xhr );
+			console.log( message );
+		}
+
+		function fetchResult ( data ) {
+			console.log( data );
+			session = data;
+			//if (data.data != null) { session = data.data }
+			//console.log(JSON.stringify(session,null,4));
+
+			if ( session.result != 'OK' ) {
+				session = undefined;
+				//popUpMessage('Your session is not defined and most likely expired.');
+				return;
+			}
+			if ( session && session.data && session.data.contact ) {
+				let initials = '';
+				if ( session.data.contact.name.initials && session.data.contact.name.initials.length > 0 ) {
+					initials = ' ' + session.data.contact.name.initials + '.';
+				}
+				$( '#desktopUsername' ).text( session.data.contact.name.first + initials + ' ' + session.data.contact.name.last );
+			}
+
+			if ( session && session.data && session.data.user && session.data.user.thumbnailPhoto ) {
+				$( '#thumbnailPhoto' ).attr( 'src', 'data:image/png;base64,' + session.data.user.thumbnailPhoto );
+			}
+			return;
+		}
+
+		function fetchUserResult ( data ) {
+			console.log( data );
+			session.user = data.resultholder.profiles.profileholder;
+			var pixURL = "https://insite.web.boeing.com/culture/i/me/" + session.user.user.bemsId;
+			console.log( pixURL );
+			$( "#userPicture" ).attr( 'src', pixURL );
+		}
+
+
+		// Main page layout, use full body, simple header, resizeable navigation panel on left, content on right
+
+		var headerSize = 60;
+		var headerMargin = 4;
+		var footerSize = 20;
+		var footerMargin = 4;
+		var resizerWidth = 5;
+		var navSizeMin = 400;
+		var navSize;
+		var scrollSize = 5;
+
+		function intervalSet ( self ) {
+			console.log( self );
+			console.log( $( self ).val() );
+			$( '#interval' ).val( $( self ).val() );
+		}
+
+		function popUpOpen () {
+			//var popUpUnderlay = $('<div id=popUpUnderlay></div>');
+			//popUpUnderlay.css({borderRadius:'5px',border:'none','backgroundColor':'gray',opacity:0.0,width:'100%',height:'100%',left:'0px',top:'0px',zIndex:999900,position:'absolute'});
+			//$('body').append(popUpUnderlay);
+			//popUpUnderlay.on('mouseover',function(){ $('#popUpUnderlay').remove(); $('#popUpOpen').remove(); });
+
+			var offset = $( '#chartContainer' ).offset();
+			var width = $( '#chartContainer' ).innerWidth();
+			var height = $( '#chartContainer' ).innerHeight();
+			//console.log(offset);
+			var div = $( '<div id=loaderPopUp><img src=/image/lg.rotating-balls-spinner.gif style="margin:0;border:0;padding:0;z-index:999951"></div>' );
+			$( 'body' ).append( div );
+			$( div ).css( { left: offset.left + 'px', top: offset.top + 'px', border: 0, paddingLeft: ( ( width - 256 ) / 2 ) + 'px', paddingTop: ( ( height - 256 ) / 2 ) + 'px', paddingRight: 0 + 'px', paddingBottom: 0 + 'px', margin: 0, backgroundColor: '#dddddd', opacity: 0.5, position: 'absolute', zIndex: 999950, width: width, height: height } );
+			//$(div).css({left:offset.left+'px',top:offset.top+'px',border:0,margin:0,padding:(width/4)+'px',backgroundColor:'#dddddd44',position:'absolute',zIndex:999950,width:width,height:height});
+		}
+
+		function popUpClose () {
+			$( '#loaderPopUp' ).remove();
+		}
+
+		function dateProcessThisVal ( self, selector ) {
+			console.log( self );
+			console.log( selector );
+			$( '#' + selector ).val( "" );
+			$( '#periodSelect' ).val( "" );
+			var val = dateProcess( $( self ).val() );
+			console.log( $( self ).attr( 'id' ) );
+			if ( $( self ).attr( 'id' ).match( /calendarEnd/ ) && val.match( /00:00:00/ ) ) { val = val.replace( /00:00:00/, '23:59:59' ); }
+			$( self ).val( val );
+			checkDateRange();
+		}
+
+		function dateProcess ( input ) {
+			var parts = input.split( /\D+/ );
+			var yyyy = parseInt( parts.shift(), 10 );
+			if ( isNaN( yyyy ) ) { yyyy = 0 }
+			if ( yyyy < 100 ) { yyyy += 2000 }
+			var mm = parseInt( parts.shift(), 10 );
+			if ( isNaN( mm ) || mm < 1 || mm > 12 ) { mm = 1; }
+			var dd = parseInt( parts.shift(), 10 );
+			if ( isNaN( dd ) || dd < 1 || dd > 31 ) { dd = 1; }
+			var hh = parseInt( parts.shift(), 10 );
+			if ( isNaN( hh ) || hh < 0 || hh > 23 ) { hh = 0; }
+			var mi = parseInt( parts.shift(), 10 );
+			if ( isNaN( mi ) || mi < 0 || mi > 59 ) { mi = 0; }
+			var ss = parseInt( parts.shift(), 10 );
+			if ( isNaN( ss ) || ss < 0 || ss > 59 ) { ss = 0; }
+			var ms = parseInt( parts.shift(), 10 );
+			if ( isNaN( ms ) || ms < 0 || ms > 999 ) { ms = 0; }
+			return $.sprintf( "%04d-%02d-%02d %02d:%02d:%02d", yyyy, mm, dd, hh, mi, ss, ms );
+		}
+
+		function dateProcessISO ( input ) {
+			var parts = input.split( /\D+/ );
+			var yyyy = parseInt( parts.shift(), 10 );
+			if ( isNaN( yyyy ) ) { yyyy = 0 }
+			if ( yyyy < 100 ) { yyyy += 2000 }
+			var mm = parseInt( parts.shift(), 10 );
+			if ( isNaN( mm ) || mm < 1 || mm > 12 ) { mm = 1; }
+			var dd = parseInt( parts.shift(), 10 );
+			if ( isNaN( dd ) || dd < 1 || dd > 31 ) { dd = 1; }
+			var hh = parseInt( parts.shift(), 10 );
+			if ( isNaN( hh ) || hh < 0 || hh > 23 ) { hh = 0; }
+			var mi = parseInt( parts.shift(), 10 );
+			if ( isNaN( mi ) || mi < 0 || mi > 59 ) { mi = 0; }
+			var ss = parseInt( parts.shift(), 10 );
+			if ( isNaN( ss ) || ss < 0 || ss > 59 ) { ss = 0; }
+			var ms = parseInt( parts.shift(), 10 );
+			if ( isNaN( ms ) || ms < 0 || ms > 999 ) { ms = 0; }
+			return $.sprintf( "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ", yyyy, mm, dd, hh, mi, ss, ms );
+		}
+
+		function setPeriod ( self ) {
+			var val = $( self ).find( ':selected' ).val();
+			console.log( val );
+			if ( val.match( /manual/i ) ) { return }
+			var parts = val.split( /:/ );
+			var start = parts[0];
+			var end = parts[1];
+			console.log( 'start=' + start + ', end=' + end );
+			$( '#calendarStartSelect' ).val( start );
+			$( '#calendarEndSelect' ).val( end );
+			setDate( $( '#calendarStartSelect' ).get( 0 ), 'start', 'calendarStart' );
+			setDate( $( '#calendarEndSelect' ).get( 0 ), 'end', 'calendarEnd' );
+			checkDateRange();
+		}
+
+		function setDateManual ( self, se, target ) {
+			$( '#periodSelect' ).val( '' );
+			setDate( self, se, target );
+			checkDateRange();
+		}
+
+		function setDate ( self, se, target ) {
+			var daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; // months 1 - 12, not 0 - 11
+			var qStartMonth = [0, 1, 4, 7, 10];
+			var qEndMonth = [0, 3, 6, 9, 12];
+			var val = $( self ).find( ':selected' ).val();
+			var dte = new Date();
+			// doing all date math in seconds, not milliseconds
+			var now = dte.getTime() / 1000;
+			var today = ( Math.floor( now / 86400 ) ) * 86400;
+			var parts = dateParts( today * 1000 );
+			var yyyy = parts[0];
+			var mm = parts[1];
+			var dd = parts[2];
+			var day = parts[3];
+			var quarter = parts[4];
+			var d;
+			var n;
+
+			if ( val == '15 Days Ago' ) {
+				today -= 14 * 86400;
+			}
+			else if ( val == '30 Days Ago' ) {
+				today -= 29 * 86400;
+			}
+			else if ( val == '7 Days Ago' ) {
+				today -= 6 * 86400;
+			}
+			else if ( val == 'End of Last Month' ) {
+				--mm;
+				if ( mm == 0 ) { --yyyy; mm = 12; }
+				dd = daysInMonth[mm];
+				if ( mm == 2 && leapYear( yyyy ) ) { dd += 1; }
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				console.log( d.toISOString() );
+				n = d.getTime();
+				console.log( dateParts( n ) );
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'End of Last Quarter' ) {
+				--quarter;
+				if ( quarter == 0 ) { quarter = 4; --yyyy; }
+				mm = qEndMonth[quarter];
+				dd = daysInMonth[mm];
+				if ( mm == 2 && leapYear( yyyy ) ) { dd += 1; }
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'End of Last Year' ) {
+				--yyyy;
+				mm = 12;
+				dd = 31;
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'End of This Month' ) {
+				dd = daysInMonth[mm];
+				if ( mm == 2 && leapYear( yyyy ) ) { dd += 1; }
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'End of This Quarter' ) {
+				mm = qEndMonth[quarter];
+				dd = daysInMonth[mm];
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'End of This Year' ) {
+				mm = 12;
+				dd = 31;
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'Last Monday' ) {
+				today -= ( day - 1 ) * 86400;
+			}
+			else if ( val == 'Last Sunday' ) {
+				today -= day * 86400;
+			}
+			else if ( val == 'Monday Before Last' ) {
+				today -= ( 7 + ( day - 1 ) ) * 86400;
+			}
+			else if ( val == 'Sunday Before Last' ) {
+				today -= ( 7 + ( day - 0 ) ) * 86400;
+			}
+			else if ( val == 'Last Month' ) {
+				--mm;
+				if ( mm == 0 ) { --yyyy; mm = 12 }
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				d = new Date( d.getTime() + 86400000 ); // increment by one day since Ago's are inclusive
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'Last 3 Months' ) {
+				mm -= 3;
+				if ( mm <= 0 ) { --yyyy; mm += 12; }
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				d = new Date( d.getTime() + 86400000 ); // increment by one day since Ago's are inclusive
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'Start of Last Month' ) {
+				--mm;
+				if ( mm == 0 ) { --yyyy; mm = 12 }
+				dd = 1;
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'Start of Last Quarter' ) {
+				--quarter;
+				if ( quarter == 0 ) { --yyyy; quarter = 4 }
+				mm = qStartMonth[quarter];
+				dd = 1;
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'Start of Last Year' ) {
+				--yyyy;
+				mm = 1;
+				dd = 1;
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'Start of This Month' ) {
+				dd = 1;
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'Start of This Quarter' ) {
+				mm = qStartMonth[quarter];
+				dd = 1;
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'Start of This Year' ) {
+				mm = 1;
+				dd = 1;
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'This Sunday' ) {
+				today += ( 7 - day ) * 86400;
+			}
+			else if ( val == 'Today' ) {
+				// already today
+			}
+			else if ( val == 'Last Year' ) {
+				--yyyy;
+				d = new Date( yyyy + '/' + mm + '/' + dd + ' 00:00:00 +0000' );
+				d = new Date( d.getTime() + 86400000 ); // increment by one day since Ago's are inclusive
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'Beginning of Data' ) {
+				dd = 1;
+				d = new Date( '2014/10/01' );
+				n = d.getTime();
+				today = ( Math.floor( n / 1000 / 86400 ) ) * 86400;
+			}
+			else if ( val == 'Yesterday' ) {
+				today -= 86400
+			}
+
+			if ( se.match( /end/ ) ) {
+				today += 86399;
+			}
+
+			var newDate = new Date( today * 1000 );
+			$( '#' + target ).val( newDate.toISOString().substr( 0, 19 ).replace( /T/, ' ' ) );
+		}
+
+		function leapYear ( year ) {
+			return ( ( year % 4 == 0 ) && ( year % 100 != 0 ) ) || ( year % 400 == 0 );
+		}
+
+		function dateParts ( dte ) {
+			var d = new Date( dte );
+			//console.log(d.toISOString());
+			var yyyy = d.getUTCFullYear();
+			var mm = d.getUTCMonth() + 1;
+			var dd = d.getUTCDate();
+			var day = d.getUTCDay();
+			var quarter = Math.floor( ( mm - 1 ) / 3 ) + 1;
+			return [yyyy, mm, dd, day, quarter];
+		}
+
+		function checkDateRange () {
+			var dateStart = dateProcessISO( $( "#calendarStart" ).val() );
+			var dateEnd = dateProcessISO( $( "#calendarEnd" ).val() );
+			if ( dateStart > dateEnd ) {
+				$( '#startAfterEnd' ).css( { display: 'inline-block' } );
+			}
+			else {
+				$( '#startAfterEnd' ).css( { display: 'none' } );
+			}
+		}
+
+		function clickBySibling ( self ) {
+			// see if we should set the count
+			//console.log($(self).closest('tr').find("[topcount]").get(0));
+			var thisTopCount = $( self ).closest( 'tr' ).find( "[topcount]" ).val();
+			console.log( thisTopCount );
+			if ( !isNaN( thisTopCount ) && thisTopCount > 0 ) { topCount = parseInt( thisTopCount ); }
+			var clicker = $( self ).parent().siblings( "[onclick]" ).get( 0 );
+			$( clicker ).click();
+			//console.log(clicker);
+		}
+
+		function calendarSibling ( self ) {
+			var dateInput = $( self ).siblings( "[dateinput]" ).get( 0 );
+			console.log( dateInput );
+			popUpCalendar( self, dateInput );
+		}
+
+		function popUpCalendar ( self, dateInput ) { // self is button/icon calling this so overlay of calendar can be on top, dateInput is where we get the starting date and put the picked date
+			var popUpUnderlay = $( '<div id=popUpUnderlay></div>' );
+			popUpUnderlay.css( { border: 'none', 'backgroundColor': 'transparent', opacity: 0.0, width: '100%', height: '100%', left: '0px', top: '0px', zIndex: 999900, position: 'absolute' } );
+			$( 'body' ).append( popUpUnderlay );
+			popUpUnderlay.on( 'mouseover', function () { $( '#popUpUnderlay' ).remove(); $( '#popUpCalendar' ).remove(); } );
+
+			var offset = $( self ).offset();
+			var width = '200px';
+			var height = '200px';
+			//console.log(offset);
+			var div = $( '<div id=popUpCalendar></div>' );
+			$( 'body' ).append( div );
+			$( div ).css( { borderRadius: '5px', left: offset.left + 'px', top: offset.top + 'px', border: 'solid black 1px', margin: 0, backgroundColor: '#f7f7f7', position: 'absolute', zIndex: 999950, width: width, height: height, maxWidth: width, maxHeight: height } );
+			//$(div).css({left:offset.left+'px',top:offset.top+'px',border:0,margin:0,padding:(width/4)+'px',backgroundColor:'#dddddd44',position:'absolute',zIndex:999950,width:width,height:height});
+			var dateVal = $( dateInput ).val().replace( / /, 'T' );
+			console.log( dateVal );
+			dateVal = new Date( dateVal );
+			console.log( dateVal );
+			$( "#popUpCalendar" )
+				.jqxCalendar( { width: '100%', height: '100%', showOtherMonthDays: true } )
+				.jqxCalendar( 'setDate', dateVal );
+			$( "#popUpCalendar" ).on( 'change', function ( event ) {
+				console.log( event );
+				var titleBar = $( "#popUpCalendar" ).find( '.jqx-calendar-title-content' ).get( 0 );
+				console.log( titleBar );
+				var titleText = $( titleBar ).text().replace( /-|\s/g, '' ); // don't want dashes from decade range messing up the \D matrh below
+				console.log( titleText );
+				if ( !titleText.match( /\D/ ) ) {    // if there non-digit text, e.g. 'January', in the title bar, the selection was a day and OK to close the window.  If not, the user had drilled to year or decade selector and it is not yet time to close the calendar pop up
+					return;
+				}
+				var newDate = $( '#popUpCalendar' ).jqxCalendar( 'getDate' );
+				console.log( newDate );
+				var timeStamp = '00:00:00';
+				if ( $( dateInput ).attr( 'id' ).match( /calendarEnd/ ) ) { timeStamp = '23:59:59'; }
+				var dateStamp = newDate.getFullYear() + ' ' + ( newDate.getMonth() + 1 ) + ' ' + newDate.getDate() + ' ' + timeStamp;
+				console.log( dateStamp );
+				$( dateInput ).val( dateProcess( dateStamp ) );
+				dateProcessThisVal( dateInput, $( dateInput ).attr( 'id' ) + 'Select' );
+				$( '#popUpCalendar' ).remove();
+				$( '#popUpUnderlay' ).remove();
+			} );
+		}
+
+		function checkTopCount ( self ) {
+			$( self ).val( $( self ).val().replace( /\D/g, '' ) );
+			if ( $( self ).val().length == 0 ) { $( self ).val( '20' ); }
+		}
+
+		/* global PerfectScrollbar */
+		var perfectScrollbar;
+
+		function treeOptions ( target, item, parent ) {   // these need to be done AFTER the tree is built because the disposition of the option is dependent on the tree structure
+			if ( item.label ) {
+				console.log( 'treeOptions:' + item.label )
+				var element = $( '#' + item.id );
+				console.log( element );
+				//$(element).on('click',Function('searchHere(this)'));
+				var li = element.closest( 'li' ).get( 0 );
+				console.log( li );
+				var itemJqx = $( target ).jqxTree( 'getItem', li );
+				if ( item.expanded ) {
+					$( target ).jqxTree( 'expandItem', li );
+				}
+				if ( item.checked && item.checked == true ) {
+					$( target ).jqxTree( 'checkItem', li, true );
+				}
+				if ( item.API ) {
+					//$(element).siblings("[searchButton]").attr('src','/icons/search.png').attr('path',item.id.replace(/^whereItem-/,'').replace(/-/g,'.')).on('click',Function('searchHere(this)'));
+					//$(element).siblings("[moreButton]").attr('src','/icons/search_add.png').attr('path',item.id.replace(/^whereItem-/,'').replace(/-/g,'.')).on('click',Function('searchMore(this)'));
+				}
+				if ( item.children ) {
+					for ( var i in item.children ) {
+						treeOptions( target, item.children[i], itemJqx );
+					}
+					//loadTreeList(target,item.children,itemJqx);
+				}
+			}
+		}
+
+		function treeBuild ( target, item, parent ) {
+			if ( item.label ) {
+				console.log( 'treeBuild:' + item.label );
+				console.log( parent );
+				// get the id of parent, if null, assign whereItem- + label, else append to existing to make a path
+				var itemJqxParent = $( target ).jqxTree( 'getItem', parent );
+				console.log( itemJqxParent );
+				if ( itemJqxParent ) {   // full label path as id
+					let clickableSpan = $( itemJqxParent.element ).find( "[clickable]" ).get( 0 );
+					console.log( clickableSpan );
+					item.id = $( clickableSpan ).attr( 'id' ) + '-' + item.label.replace( /\W/g, '_' );
+				}
+				else {
+					item.id = "whereItem-" + item.label.replace( /\W/g, '_' );
+				}
+				console.log( item.id );
+				let path = item.id.replace( /^whereItem-/, '' ).replace( /-/g, '.' );
+				console.log( path );
+				if ( item.API ) { setDeep( whereToMap, path + '.API', item.API ) }
+				$( target ).jqxTree( 'addTo', { html: "<span clickable style='' id='" + item.id + "'>" + item.label + "</span> <img searchButton style='margin-bottom:-1px;vertical-align:bottom'> <img moreButton style='margin-bottom:-1px;vertical-align:bottom'>" }, parent );
+				//console.log($(target).jqxTree('getItem'));
+				var element = $( '#' + item.id ).get( 0 );
+				console.log( element );
+				var li = $( element ).closest( 'li' ).get( 0 );
+				console.log( li );
+				var itemJqx = $( target ).jqxTree( 'getItem', li );
+				console.log( itemJqx );
+				//var liParent = $(itemJqx).closest('li');
+				//console.log(liParent);
+				//var itemJqxParent = $(target).jqxTree('getItem', liParent);
+				//console.log(itemJqxParent);
+				//var childParent = null;
+				//if (itemJqx) { childParent = itemJqx.parentElement }
+				//console.log(childParent);
+				if ( item.children ) {
+					for ( var i in item.children ) {
+						treeBuild( target, item.children[i], itemJqx.element );
+					}
+					//loadTreeList(target,item.children,itemJqx);
+				}
+				return li;
+			}
+		}
+
+		function searchHere ( self ) {
+			console.log( self );
+			//let id = $(self).attr('id');
+			let path = $( self ).attr( 'path' );
+			console.log( whereToMap );
+			let where = getDeep( whereToMap, path + '.API' );
+			console.log( where );
+			if ( !where ) {
+				alert( "This location's search parameters is not currently available" );
+				return;
+			}
+			for ( var target in where.targets ) {
+				if ( urlSearchAPI == null ) {
+					urlSearchAPI = target;
+					break;
+				}
+			}
+			console.log( urlSearchAPI );
+			searchFirst();
+		}
+
+		/*
+		function loadTreeList(target,list,parent){
+			for (var item of list) {
+				console.log(item.label);
+				item.id = "whereItem_"+item.label.replace(/\W/g,'_');
+				console.log(item.id);
+				treeBuild(target,item,parent);
+				//$(target).jqxTree('addTo', { html: "<span style='' id='"+item.id+"'>"+item.label+"</span>" },parent);
+				if (item.children) {
+					var element = $('#'+item.id)[0];
+					var li = element.closest('li');
+					console.log(li);
+					var jqxItem = $(target).jqxTree('getItem', li);
+					loadTreeList(target,item.children,jqxItem);
+				}
+			}
+		}
+		*/
+
+		/* global $ */  // these comments keeps ESlint happy about jQuery being globally defined in the external file
+		/* global Option */
+
+		// the development API URL. there is a different one for production
+		var urlSearchAPI;
+		//var urlSearchAPI = "https://wfe-ewc-01.cs.boeing.com/s/api/solr";
+		//var urlSearchAPI = "https://searchins.web.boeing.com/s/api/solr";
+		//var urlSearchAPI = "http://searchins-pp.web.boeing.com/s/api/solr";
+		//var urlSearchAPI = "https://search-d.web.boeing.com/s/api/solr";
+		//var urlSearchAPI = "https://search.web.boeing.com/api/solr";
+		//var urlSearchAPI = "http://a5934545.se.nos.boeing.com:8080/api/solr";    // for local development by EJS. Can also submit this as a urlSearchAPI URL parameters to override the above
+
+		var searchStart = 0;            // initial search results to first page, this is global and used by infinite scroll to determine how many pages already loaded so it can start the follow-on search at the correct location
+		var searchPage = 0;             // current page, keeps track of pages already loaded
+		var topVisibleRow = 0;          // NOT REALLY USED YET, current row showing at top of results, this is used for re-rendering and 
+		var searchRowsPerPage = 50;     // this is the page size, i.e. the number of rows returned by each search page
+		var searchInitialized = false;  // a flag to tell the search function to init everything in case not already done yet. This is done to hold off the initialization of the result pane so the original opening nodes is there to be seen by the developer.
+		var results = [];               // this is the master table of rows currently displayed, in page/row order.  Allows re-rendering of the results in a different format.
+		var resultsByID = {};           // this is a lookup table so highlights by ID can be put into the correct rows. Allows access to the results by page ID since snippets are returned by page ID.
+		var initialSearch = '';
+		var snippetAlternate = 'content_truncated_tt';  // the data field to use if there is no resultant snipped data
+		// these fields need to be excluded from the list of facet selections because requesting a facet on these fields with no filters clobbers the SOLR server. Don't facet these if you want the server to stay up!
+		// OR, these fields are unique identifiers and faceting on them would be useless
+		var facetExcludes = { _timestamp_: true, _version_: true, id: true, url_s: true, content_tt: true, content_truncated_tt: true, description_tt: true };
+
+		// a default filter string, usually a list of domains relevant to your saerch UI that you only want searched, see the schema for available fields and https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html for syntax
+		var filter = "";    // see examples below.  You can use wildcards like ins* but be wary as they can be slow. "*.web.boeing.com" would be REALLY slow as leading wildcards force an examination of every value rather than using the index.
+		// var filter = "+domain_ss:(insidebds.web.boeing.com iticket.web.boeing.com bscdelivery.ca.boeing.com)";   // results *must*  be in any of insidebds, iticket or bscdelivery sites
+		// var filter = "-domain_ss:(insite.web.boeing.com)";   // *excludes* inSite from search results
+
+		// results fields are returned and thus what you using in your results display
+		// be VERY carefull about returning content_tt and other content fields. Some can be quite large and all the data will be returned which can take significant time.
+		// of note, we supply the field content_truncated_tt, which is the first 256 characters of content_tt. This is good to use if the snippet is blank which happens when no key words are provided. Don't search truncated content as it is not representative of what is in the document.
+		// The snippets/highlighted fields are better for results data. However, if you don't specify the snippet, there might not be text to display.
+		var resultFields = ['description_tt', 'content_truncated_tt', 'id', 'url_s', 'title_tt', 'sptitle_tt', 'score', 'domain_ss'];
+
+		// SOLR will return text snippets from the fields specified below when terms match within them. Generally, these should correspond to the fields specified in the qf parameters since those are all searched.
+		var snippetFields = ['title_tt', 'content_tt', 'terms_tts_on', 'terms_ss', 'sptitle_tt', 'sp_terms_tts_on', 'sp_terms_ssl'];
+
+		var filterUI;   // this is the global variable for storing the filter array created by the UI. Don't put anything here as it will be overwritten by filterCalculate().
+
+		function searchFirst ( self ) {
+			console.log( self );
+			searchInit();
+			filterCalculate();
+			searchMain();
+			searchFacets();
+		}
+
+		function searchMore () {
+			searchStart += searchRowsPerPage;
+			++searchPage;
+			searchMain();
+			// only do facets on initial search
+		}
+
+		function searchInit () {
+			searchStart = 0;
+			searchPage = 0;
+			topVisibleRow = 0;
+			results = [];
+			resultsByID = {};
+			$( '#results' ).html( '' );
+			//$('#facets').html('');
+			initialSearch = $( '#queryTerms' ).val().replace( /\s+/g, ' ' );  // save the initial search so "More" can use the original search just in case somebody fiddles with the search input. We want "More" to keep going the same as the first page.
+			console.log( initialSearch );
+			searchInitialized = true;
+		}
+
+		function searchMain () {
+			if ( !searchInitialized ) { searchInit(); }
+			/*
+			Build the SOLR query as a JS object. The server will parse the JSON submission and POST to SOLR as an application/x-www-form-urlencoded request.
+			The server provides defaults as below but subject to change:
+				qf=terms_tts_on^10 content_tt^4 terms_ss^10 sptitle_tt^4 title_tt^4 sp_terms_tts_on^10 sp_terms_ssl^100
+				pf=terms_tts_on^1 content_tt^10 sptitle_tt^10 title_tt^10 sp_terms_tts_on^10
+				bf=
+				defType=edismax
+				fl=score id content_tt title_tt url_s
+				wt=json
+				fq=
+				q=*:*
+				start=0
+				rows=10
+			You can go pretty deep into SOLR and do most every thing documented up to v6.X.
+			We reserve the right to block features if they impact the server in a negative way.
+			We add a query filter to enforce document permssions which are stored as SID strings with the documents. A users SID string permission list is returned when in debug mode.
+			Many documents are public with dummy SIDs of 0 and 1. These are always included with queries.
+			Emable debug above to get the final parameters submitted to SOLR back in your results in the responseHeader section.
+			*/
+
+			/*
+			The query object is a batch of top level of objects, each is a separate SOLR query identified by you for subsequent process in the success response handler. 
+			In this demo, the page number as the query ID. It will also be the facet field when facet demo is ready.
+			The server will process each request individually, currently sequentially but parallel processing of each of these requests is coming. This gets around the very significant browser connection limit.
+			The main parameters of each SOLR query in the batch is the SOLR "params" parameter.
+			Start here for documentation on building SOLR queries: https://lucene.apache.org/solr/guide/6_6/common-query-parameters.html
+			Inlcude any data you want in the passback object. This is sent back to the success function to allow you to identify and handle the multiple requests you might submit.
+			*/
+
+			var query = {};
+			query.debug = true; // set this to false or just don't include at all to reduce the amount of spurious data returned.  Test your code in debug:false mode. The only object parts that come back outside of debug mode are data, highlighting, maxScore, numFound and passback (if specified)
+			var dte = new Date();
+			var filterLocal = [];
+			if ( filter.length > 0 ) {
+				filterLocal.push( filter );
+			}
+			if ( typeof ( filterUI ) != 'undefined' && filterUI.length > 0 ) {
+				filterLocal = filterLocal.concat( filterUI );
+			}
+			query[searchPage + ''] = {
+				params: {
+					wt: "json", // tell SOLR to give us JSON results, other options are XML and CSV
+					start: searchStart, // used by more for paging
+					rows: searchRowsPerPage,    // just a constant, also use by more to keep track of pages
+					"q.alt": "*:*",
+					q: initialSearch,   // pulled from input val when search is initialized for first run
+					// Highlighting, learn more about SOLR hightlighting to get snippets back using the hl. paramters here: https://lucene.apache.org/solr/guide/7_3/highlighting.html
+					"hl": "true",
+					"hl.fl": snippetFields.join( ' ' ),
+					"hl.snippets": 3,
+					"hl.simple.pre": "<span style='color:red'>",
+					"hl.simple.post": "</span>",
+
+					fl: resultFields.join( ' ' ),   // see the resultFields value above
+
+					// primarily to set your domains you want to limit searches to as in the example parameter, see the filter value above
+					// but, can be used to filter by other fields such as date, etc.
+					fq: filterLocal.join( ' ' ),
+
+					// if pf is NOT specified, the server will provide a default pf. setting pf = "" will disable the parameter
+					// pf adds a phrase type query using the original terms which thus causes results with the words close together to be ranked higher
+					pf: '',
+
+					// NOT overriding server default will make your results closer to enterprise search results. But, you may want to do it your own way
+					// if qf is NOT specified, the server will provide a default qf.
+					// IF qf is specified with boosts, inidividual boosts in trhe q parameter will be ignored. setting qf="" will disable the parameter BUT THEN, the q parameter must specify fields or else no fields will be searched.
+					// qf:'terms_tts_on^10 content_tt^4 terms_ss^10 sptitle_tt^4 title_tt^4 sp_terms_tts_on^10 sp_terms_ssl^100',
+					// qf:'terms_tts_on content_tt terms_ss0 sptitle_tt title_tt sp_terms_tts_on sp_terms_ssl',
+					// qf:'',
+
+					// send this to get debug/explain info in the responseHeader from SOLR but must also have query.debug = true above
+					debugQuery: "true"
+				},
+				passback: {
+					example: 'Send this data back with the response so it can be used to place data where it belongs in the page', //. Particularly useful for facets specifying the target div for the facet table so each facet result can be rendered to a diffent <div> Object
+					start: dte.getTime()
+				}
+			};
+
+			console.log( query );
+
+			// only POST is supported at this time, the submitted data can get pretty large and might exceed length limitations of GET
+			$.ajax( {
+				xhrFields: { withCredentials: true },  // tells system to submit cookies with this request, needed for WSSO.  See https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials
+				url: urlSearchAPI,   // API server target . Someday, we may have multiple targets for different content. Today, only one target index available.
+				data: JSON.stringify( query, null, 4 ),  // needs to be string since text/plain. For readability in debug, using pretty formatting, i.e. "null,4". Pretty is not necessary.
+				type: 'POST',        // only POST supported
+				contentType: 'text/plain',   // can't be application/json without causing CORS issues, See https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#Simple_requests
+				success: function ( data ) { searchSuccess( data ); }, // target for a search result. Your passback parameter should provide instruction as to how to handle different result types.
+				error: function ( xhr, status, error ) { ajaxFail( xhr, status, error ); } // general dump of errored results
+			} );
+		}
+
+		function searchSuccess ( responseData ) {
+			console.log( responseData );
+
+			var dte = new Date();
+
+			// copy the responseData results into our global results array, can be initial or subsequent pages.  Just appened to array
+			for ( var page in responseData ) {    // searchMain() above submits queries by page, BUT page is a string so need to convert to int
+				var rt = 'N/A';
+				if ( responseData[page].passback != null && responseData[page].passback.start != null ) {
+					rt = ( dte.getTime() - parseInt( responseData[page].passback.start, 10 ) ) + '';
+				}
+
+				// go through each result row, i is index within the results array
+				for ( var i in responseData[page].data ) {
+					var row = responseData[page].data[i];   // put the row in a convenience variable
+
+					// figure out the place for this page of results in the overall result table
+					var absoluteRow = parseInt( page, 10 ) * searchRowsPerPage + parseInt( i, 10 );
+					row.row = absoluteRow;  // just putting the row number in the array so we have it for display purposes
+
+					// some row field may come back as arrays from SOLR if they are multi-value fields. For convenience of subsequent rendering functions, we want these all to be strings so replace the array with a joined string
+					for ( var rf in row ) {   // rf is row field name
+						if ( Array.isArray( row[rf] ) ) {
+							row[rf] = row[rf].join( ', ' );
+						}
+					}
+
+					// row is a pointer, thus both of these point to the same row so any manipulation or change will do both
+					results[absoluteRow] = row;
+					resultsByID[row.id] = row;
+				}
+
+				// merge the highlights into the row data appending field name with _hl AND create the general purpose SNIPPET field from the highlights result
+				// REMEMBER, highlights are ARRAYS of strings
+				//console.log(responseData[page].highlighting);
+				if ( responseData[page].highlighting != null ) {
+					for ( var id in responseData[page].highlighting ) {    // remember, highlight results are keyed by id
+						//console.log(resultsByID[id]);
+						if ( resultsByID[id] ) {
+							resultsByID[id].SNIPPETS = {}; // SNIPPETS will be an accumulations of all the snippets so they can be display as one field later probalby using a join statement.  See RENDER section below for example.
+							for ( var field in responseData[page].highlighting[id] ) {
+								if ( responseData[page].highlighting[id][field] != null ) { resultsByID[id].SNIPPETS[field] = responseData[page].highlighting[id][field]; } // SNIPPETS will be an accumulations of all the snippets so they can be display as one field later probalby using a join statement
+							}
+						}
+					}
+				}
+
+				// finally, if there is not snippet data but there is a valid snippetAlternative, copy that into the snippet
+				for ( i in responseData[page].data ) {
+					row = responseData[page].data[i];   // put the row in a convenience variable
+					absoluteRow = parseInt( page, 10 ) * searchRowsPerPage + parseInt( i, 10 );
+					row = results[absoluteRow];
+					var snippetKeys = Object.keys( row.SNIPPETS );
+					if ( snippetKeys.length == 0 ) {
+						if ( typeof ( snippetAlternate ) != 'undefined' && snippetAlternate.length > 0 ) {
+							row.SNIPPETS[snippetAlternate] = [];
+							row.SNIPPETS[snippetAlternate].push( row[snippetAlternate] );
+						}
+						else {
+							row.SNIPPETS['DEFAULT'] = [];
+							row.SNIPPETS['DEFAULT'].push( 'No content found' );
+						}
+					}
+					// create a SNIPPET (not plural) field for easy rendering by templates. The SNIPPETS data is still available to those that might want to do very specific things with the SNIPPETS display
+					for ( var snipField in row.SNIPPETS ) {
+						//console.log(snipField);
+						//console.log(row.SNIPPETS[snipField]);
+						if ( row.SNIPPETS[snipField] == null || ( Array.isArray( row.SNIPPETS[snipField] ) && row.SNIPPETS[snipField].length == 0 ) ) { continue; }   // Snippet is empty so skip
+						if ( row.SNIPPET == null ) { row.SNIPPET = '' }
+
+						// good place to build your HTML foramtting of the SNIPPET content
+						row.SNIPPET += '<span style="color:green">[' + snipField + ']</span> ';
+						var delim = '';
+						for ( var j in row.SNIPPETS[snipField] ) {
+							row.SNIPPET += delim + row.SNIPPETS[snipField][j];
+							delim = '<span style="color:red"> &bull; </span>';
+						}
+						row.SNIPPET += '<br>';
+					}
+				}
+			}
+			console.log( results );
+
+			// render the results, take into account if this is a subseqent page in infinite scroll
+			// Header stuff, query summary
+			var pageHeader;
+			if ( searchPage == 0 ) {  // initialize result section
+				$( '#results' ).html( "<div id=resultRowSummary style='padding:5px;background-color:white'>Results Found:<b>" + responseData[page].numFound + "</b>, Max Score: <b>" + responseData[page].maxScore + "</b>, SOLR Query Time (ms): <b>" + responseData[page].QTime + "</b>, Round Trip Time (ms): <b>" + rt + "</b><br><br></div>" );
+			}
+			else {  // initialize result section
+				var pageHeader = $( "<div id=resultRowSummary" + searchPage + " style='padding:5px;background-color:white'><br>SOLR Query Time (ms): <b>" + responseData[page].QTime + "</b>, Round Trip Time (ms): <b>" + rt + "</b><br><br></div>" );
+				$( '#results' ).append( pageHeader );
+			}
+
+			// RENDER section
+			// generate the results one result line at a time and then appened the result line <div> to the #results div
+			var topOfThisPage;
+			var elmnt;
+			for ( i in responseData[page].data ) {
+				row = responseData[page].data[i];
+				//console.log(row);
+				// build the HTML here
+				var rowId = ( parseInt( searchPage, 10 ) * searchRowsPerPage ) + parseInt( i, 10 );
+				if ( topOfThisPage == null ) { topOfThisPage = rowId }    // record the first page in this page render
+				//console.log(rowId);
+				// graybar coloring
+				var bg = '#f0f0f0';
+				if ( ( i % 2 ) == 1 ) { bg = '#e0e0e0'; }
+
+				// generate the result row header
+				var html = '<div id=resultRow' + rowId + ' style="padding:5px;background-color:' + bg + '">';
+				var title = row.sptitle_tt;
+				//if (typeof(title) == 'undefined' || title.length == 0) {
+				//   title = row.description_tt;
+				//}
+				if ( typeof ( title ) == 'undefined' || title.length == 0 ) {
+					title = row.title_tt;
+				}
+				if ( typeof ( title ) == 'undefined' || title.length == 0 ) {
+					title = row.url_s;
+				}
+				html += '<a href="' + row.url_s + '" target=APIDEMO>' + title + '</a> [domain_ss=' + row.domain_ss + ', score=' + row.score + ', result row#=' + row.row + '] <span id=' + row.id + ' style="color:blue" onClick="showData(this)">DATA</span><br>';
+				html += row.SNIPPET;
+
+				// good place for a result row footer
+
+				// close up the row and append to result pane
+				html += '</div>';
+				//console.log(html);
+				$( '#results' ).append( html );
+
+				// make the new results visible by scrolling into view
+				elmnt = document.getElementById( 'resultRow' + topOfThisPage );
+			}
+			if ( elmnt ) {
+				elmnt.scrollIntoView();
+			}
+		}
+
+		function showData ( self ) {
+			console.log( $( self ).attr( 'id' ) );
+			popUpOpen( $( self ).attr( 'id' ) );
+		}
+
+		function searchFacets () {
+			var fieldList = [];
+			$( '#navigation' ).find( "[facet]" ).each( function () {
+				var id = $( this ).attr( 'id' ).replace( /^^facet_/, '' );
+				fieldList.push( id );
+				console.log( id );
+			} );
+			console.log( fieldList );
+			var query = {};
+			facetQueryBuild( query, fieldList );
+			if ( Object.keys( query ).length > 0 ) {
+				facetQueryExecute( query );
+			}
+		}
+
+
+		function searchFacet ( field ) {
+			var query = {};
+			facetQueryBuild( query, field );
+			if ( Object.keys( query ).length > 0 ) {
+				facetQueryExecute( query );
+			}
+		}
+
+		function facetQueryBuild ( query, fieldList ) {
+			//query.debug = true; // set this to false or just don't include at all to reduce the amount of spurious data returned.  Test your code in debug:false mode. The only object parts that come back outside of debug mode are data, highlighting, maxScore, numFound and passback (if specified)
+			if ( !Array.isArray( fieldList ) ) {
+				var temp = fieldList;
+				fieldList = [];
+				fieldList.push( temp );
+			}
+			var dte = new Date();
+			for ( var f in fieldList ) {
+				var filterLocal = [];
+				// put the global filter into this query's filter, usually defined by a site to limit ALL their searches by
+				if ( filter.length > 0 ) {
+					filterLocal.push( filter );
+				}
+				// put the filters from the user added filters into the filter but use the facetFilterBuild to exclude filters from THIS facet so THIS facet will show all results so they can be seen and not self limited
+				var field = fieldList[f];
+				console.log( field );
+				filterLocal = filterLocal.concat( filterCalculateFacet( field ) );
+				console.log( filterLocal );
+				if ( facetExcludes[field] != null ) { continue; } // these are excluded for reason! See the comments on the facetExcludes declaration above
+				query[field] = {
+					params: {
+						wt: "json", // tell SOLR to give us JSON results, other options are XML and CSV
+						start: 0, // used by more for paging
+						rows: 0,    // just a constant, also use by more to keep track of pages
+						"q.alt": "*:*",
+						q: initialSearch,   // pulled from input val when search is initialized for first run
+						fq: filterLocal.join( ' ' ),
+						facet: "true",
+						"facet.field": field,
+						"facet.mincount": 1,
+						"facet.limit": 100,
+						//debugQuery: "true" 
+					},
+					passback: {
+						facet: field
+					}
+				}
+			}
+		}
+
+		function facetQueryExecute ( query ) {
+			query.debug = false;
+			console.log( query );
+			$.ajax( {
+				xhrFields: { withCredentials: true },  // tells system to submit cookies with this request, needed for WSSO.  See https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials
+				url: urlSearchAPI,   // API server target . Someday, we may have multiple targets for different content. Today, only one target index available.
+				data: JSON.stringify( query, null, 4 ),  // needs to be string since text/plain. For readability in debug, using pretty formatting, i.e. "null,4". Pretty is not necessary.
+				type: 'POST',        // only POST supported
+				contentType: 'text/plain',   // can't be application/json without causing CORS issues, See https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#Simple_requests
+				success: function ( responseData ) { facetSuccess( responseData ); }, // target for a search result. Your passback parameter should provide instruction as to how to handle different result types.
+				error: function ( xhr, status, error ) { ajaxFail( xhr, status, error ); } // general dump of errored results
+			} );
+		}
+
+		function facetSuccess ( data ) {
+			console.log( data );
+			for ( var field in data ) {
+				var facetData = data[field].facet_counts.facet_fields[field];
+				console.log( facetData );
+				// render the facet to the div in the navigation panels
+				var html = '<table style="width:100%;max-width:100%">';
+				for ( var i = 0; i < facetData.length; i += 2 ) {
+					html += '<tr>';
+					html += '<td style="white-space:nowrap;max-width:250px;width:250px;overflow:hidden">';
+					html += '<img facetedFilter=' + field + ' src=/icons/true.png style="padding:3px 0px 0px 0px;height:10px;margin-bottom:-2px" onClick="filterAddFacetedField(this,true)">';
+					html += '<img facetedFilter=' + field + ' src=/icons/false.png style="padding:3px 3px 0px 3px;height:10px;margin-bottom:-2px" onClick="filterAddFacetedField(this,false)">';
+					html += '<span facetValue>' + facetData[i] + '</span>';
+					html += '</td>';
+					html += '<td style="text-align:right">';
+					html += facetData[i + 1];
+					html += '</td>';
+					html += '</tr>';
+				}
+				html += '</table>';
+				$( '#facet_table_' + field ).html( html );
+			}
+		}
+
+		function facetedFilter ( self, ix ) {
+
+		}
+
+		// schema is very useful if you wish to build an advanced query with drop-downs for list of fields available to search
+		// schema can also be used to build dynamic facets based on available fields
+		function schemaFetch ( noDisplay ) {
+			if ( typeof ( noDisplay ) == 'undefined' ) {
+				noDisplay = false;
+			}
+
+			var query = {
+				schema: {
+					target: { // default target is "query". You can override the SOLR target path here.  "admin/luke" gives schema field plus row counts. Targets are strictly control, i.e. core admin functions are not allowed.
+						path: "admin/luke"
+					},
+					params: {
+						wt: "json"
+					},
+					passback: {
+						noDisplay: noDisplay
+					}
+				}
+			};
+
+			$.ajax( {    // see the query ajax call for notes about the values below
+				xhrFields: { withCredentials: true },
+				url: urlSearchAPI,
+				data: JSON.stringify( query, null, 4 ),
+				type: 'POST',
+				contentType: 'text/plain',   // can't be application/json without causing CORS issues
+				success: function ( data ) { schemaSuccess( data ); },
+				error: function ( xhr, status, error ) { ajaxFail( xhr, status, error ); }
+			} );
+		}
+
+		var schema; // global schema, place to store schema for various uses
+
+		function schemaSuccess ( data ) {
+			console.log( data.schema.data.fields );
+			schema = data.schema.data.fields;    // store globally
+			//console.log(schema);
+			selectors();
+			if ( data.schema.passback != null && data.schema.passback.noDisplay == true ) { return; }
+			searchInitialized = false;
+			var html = '<table>';
+			var fields = Object.keys( data.schema.data.fields ).sort();
+			console.log( fields );
+			for ( var field in fields ) {
+				console.log( field );
+				var row = data.schema.data.fields[fields[field]];
+				var docs = row.docs;
+				if ( isNaN( docs ) ) { docs = 0; }
+				html += '<tr><td style="width:200px">' + fields[field] + '</td><td>' + docs + '</td></tr>';
+			}
+			html += '</table>';
+			$( '#results' ).html( html );
+		}
+
+		function ajaxFail ( xhr, status, error ) {
+			console.log( 'SOLR schema query post failed' );
+			console.log( JSON.stringify( xhr, null, 4 ) );
+			console.log( JSON.stringify( status, null, 4 ) );
+			console.log( JSON.stringify( error, null, 4 ) );
+		}
+
+		var queryURI = {};  // global object for process URL parameters
+
+		function processUrlParameters () {
+			// get the URL parameters
+			var url = window.location.href;
+			var paramString = url;
+			//console.log(url);
+			if ( url.match( /\?/ ) ) {
+				var temp = url.split( /\?/ );
+				// remove the origin and path from the URL leaving just the parameters
+				temp.shift();
+				// reconstruct the parameters in case there was a ? in the parameters string
+				paramString = temp.join( '?' );
+			}
+			//console.log(paramString);
+			var params = paramString.split( /&/ );
+			// convert the parameters string into a JS object
+			for ( var i in params ) {
+				var kv = params[i].split( /=/ );
+				var k = kv.shift();	// pull the key off the array so the rest is parameters
+				var v = kv.join( '=' );	// in case there was an = in the parameter value
+				// decode the value (v)
+				queryURI[k] = decodeURIComponent( v );
+			}
+			console.log( queryURI );
+
+			// do things with the parameters
+
+			// give the ability to override API target as a URL parameter
+			if ( queryURI.urlSearchAPI != null ) {
+				urlSearchAPI = queryURI.urlSearchAPI;
+			}
+		}
+
+		function selectors () {
+			console.log( 'facetSelector()' );
+			$( '#selectors' ).html( "" );
+			$( '#selectors' ).append( '<div style="display:inline-block;width:100px;padding:3px">Add Filter:</div><select id=selectorFilter onChange="filterAdd(this)"><option value=Select>Select...</option></select><br>' );
+			$( '#selectors' ).append( '<div style="display:inline-block;width:100px;padding:7px 3px 3px 3px">Add Facet:</div><select id=selectorFacet onChange="facetAdd(this)"><option value=Select>Select...</option></select><br>' );
+			console.log( schema );
+			let fields = Object.keys( schema );
+			for ( var f in fields.sort() ) {
+				var field = fields[f];
+				//console.log(field);
+				$( "#selectorFilter" ).append( new Option( field, field ) );
+				if ( facetExcludes[field] == null ) { // these are excluded for reason! See the comments on the facetExcludes declaration above
+					$( "#selectorFacet" ).append( new Option( field, field ) );
+				}
+			}
+		}
+
+		function filterCalculate () {
+			filterUI = [];
+			$( '#filters' ).find( "[filter]" ).each( function () {
+				console.log( this );
+				var enabledImg = $( this ).find( "[enabledflag]" ).attr( 'src' );
+				console.log( enabledImg );
+				if ( !enabledImg.match( /check/ ) ) { return 1 }
+				console.log( 'adding to filter' );
+				var includeExcludeImg = $( this ).find( "[includeexcludeflag]" ).attr( 'src' );
+				var includeExclude = '+';
+				if ( includeExcludeImg.match( /false/ ) ) { includeExclude = '-'; }
+				var fieldName = $( this ).find( "[fieldname]" ).text();
+				console.log( fieldName );
+				var bracketLeft = $( this ).find( "[bracketleft]" ).text();
+				var bracketRight = $( this ).find( "[bracketright]" ).text();
+				var input = $( this ).find( 'input' ).val();
+				if ( input.length == 0 ) { return 1 }
+				var filter = includeExclude + fieldName + ':' + bracketLeft + input.replace( /^\s+|\s+$/g, '' ).replace( /\s+/g, ' ' ) + bracketRight;
+				filterUI.push( filter );
+			} );
+			console.log( filterUI );
+		}
+
+		function filterCalculateFacet ( excludeFilter ) {
+			console.log( 'filterCalculateFacet' );
+			var filterThis = [];
+			$( '#filters' ).find( "[filter]" ).each( function () {
+				console.log( this );
+				var enabledImg = $( this ).find( "[enabledflag]" ).attr( 'src' );
+				console.log( enabledImg );
+				if ( !enabledImg.match( /check/ ) ) { return 1 }
+				var includeExcludeImg = $( this ).find( "[includeexcludeflag]" ).attr( 'src' );
+				var includeExclude = '+';
+				if ( includeExcludeImg.match( /false/ ) ) { includeExclude = '-'; }
+				var fieldName = $( this ).find( "[fieldname]" ).text();
+				console.log( 'fieldName=' + fieldName + ', excludeFilter=' + excludeFilter );
+				if ( fieldName == excludeFilter ) { console.log( 'not adding filter' ); return 1 }
+				console.log( 'adding to filter' );
+				var bracketLeft = $( this ).find( "[bracketleft]" ).text();
+				var bracketRight = $( this ).find( "[bracketright]" ).text();
+				var input = $( this ).find( 'input' ).val();
+				if ( input.length == 0 ) { return 1 }
+				var filter = includeExclude + fieldName + ':' + bracketLeft + input.replace( /^\s+|\s+$/g, '' ).replace( /\s+/g, ' ' ) + bracketRight;
+				filterThis.push( filter );
+			} );
+			console.log( filterThis );
+			return filterThis;
+		}
+
+		function filterAdd ( self ) {
+			console.log( self );
+			filterAddField( $( self ).val() );
+		}
+
+		function filterAddField ( field ) {
+			var id = 'filter_' + field;
+			var html = '<div filter=' + field + ' id=' + id + ' style="border:0;margin:0;padding:0">';
+			html += '<img includeExcludeFlag id=filter_line_' + field + ' src=/icons/true.png style="padding:3px 3px 0px 5px;height:10px;margin-bottom:-2px" onClick="toggleTrueFalse(this)">';
+			html += '<div fieldName style="width:100px;min-width:100px;display:inline-block;font-size:80%;padding-bottom:5px">' + field + '</div>';
+			html += '<span bracketLeft onClick="toggleBracket(this)" title="OR list">(</span> <input type=text style="width:200px;font-size:11px"> <span bracketRight>)</span>';
+			html += '<img enabledFlag src=/icons/check.png style="padding:5px 3px 0px 3px;height:12px;margin-bottom:-2px;" onClick="toggleCheck(this)">';    // error_do_not_small
+			html += '<img src=/icons/cross.png style="padding:5px 3px 0px 0px;height:12px;margin-bottom:-2px" onClick="removeParentFilter(this)">';
+			html += '</div>';
+			var $html = $( html );
+			$( '#filters' ).append( $html );
+			$( "#selectorFilter" ).val( 'Select' );  // reset the selector drop-down to the top "Select..." options
+			return $html;
+		}
+
+		function filterAddFacetedField ( self, mode ) {
+			var inFilter = $( self ).attr( 'inFilter' );
+			console.log( inFilter );
+			if ( inFilter ) {
+				return;
+			}
+			var field = $( self ).attr( 'facetedFilter' );
+			var id = 'filter_' + field;
+			var which = 'True';
+			var src = '/icons/true.png';
+			if ( mode == false ) {
+				src = '/icons/false.png';
+				which = 'False';
+			}
+
+			// check to see if this filter exists and if so, just appened the input
+			var valElement = $( self ).siblings( "[facetvalue]" ).get( 0 );
+			console.log( valElement );
+			var val = $( valElement ).text();
+			console.log( val );
+			if ( val.match( /\s/ ) ) { val = '"' + val + '"'; }
+			console.log( val );
+
+			var alreadyExists = false;
+			var $html;
+			$( '#filters' ).find( "[facetByFlter" + which + "=" + field + "]" ).each( function () {
+				console.log( this );
+				alreadyExists = true;
+				$html = this;
+				return 0;
+			} );
+			if ( !alreadyExists ) {
+				var html = '<div filter=' + field + ' facetByFlter' + which + '=' + field + ' id=' + id + ' style="border:0;margin:0;padding:0">';
+				html += '<img includeExcludeFlag id=filter_line_' + field + ' src=' + src + ' style="padding:3px 3px 0px 5px;height:10px;margin-bottom:-2px;opacity:0.4">';
+				html += '<div fieldName style="width:100px;min-width:100px;display:inline-block;font-size:80%;padding-bottom:5px">' + field + '</div>';
+				html += '<span bracketLeft>(</span> <input type=text style="width:200px;font-size:11px"> <span bracketright>)</span>';
+				html += '<img enabledFlag src=/icons/check.png style="padding:5px 3px 0px 3px;height:12px;margin-bottom:-2px" onClick="toggleCheck(this)">';    // error_do_not_small
+				html += '<img src=/icons/cross.png style="padding:5px 3px 0px 0px;height:12px;margin-bottom:-2px" onClick="removeParentFilter(this)">';
+				html += '</div>';
+				$html = $( html );
+				$( '#filters' ).append( $html );
+			}
+			var input = $( $html ).find( 'input' ).get( 0 );
+			console.log( input );
+			var currVal = $( input ).val();
+			console.log( currVal );
+			if ( currVal.length > 0 ) { currVal += ' ' }
+			currVal += val;
+			$( input ).val( currVal );
+			$( "#selectorFilter" ).val( 'Select' );  // reset the selector drop-down to the top "Select..." options
+			$( self ).css( { opacity: 0.5 } );
+			$( self ).attr( 'inFilter', 'true' );
+			return $html;
+		}
+
+		function toggleBracket ( self ) {
+			console.log( self );
+			var sib = $( self ).siblings( "[bracketRight]" ).get( 0 );
+			console.log( sib );
+			var content = $( self ).text();
+			if ( content.match( /\(/ ) ) {
+				$( self ).text( '"' );
+				$( self ).attr( 'title', 'Phrase' )
+				$( sib ).text( '"' );
+			}
+			else {
+				$( self ).text( '(' );
+				$( sib ).text( ')' );
+				$( self ).attr( 'title', 'OR list' )
+			}
+		}
+
+		function toggleCheck ( self ) {
+			var src = $( self ).attr( 'src' );
+			var id = $( self ).attr( 'id' );
+			//console.log(src);
+			if ( src.match( /check/ ) ) {
+				$( self ).attr( 'src', '/icons/error_do_not_small.png' )
+			}
+			else {
+				$( self ).attr( 'src', '/icons/check.png' );
+			}
+		}
+
+		function toggleTrueFalse ( self ) {
+			var src = $( self ).attr( 'src' );
+			var id = $( self ).attr( 'id' );
+			//console.log(src);
+			if ( src.match( /true/ ) ) {
+				$( self ).attr( 'src', '/icons/false.png' )
+			}
+			else {
+				$( self ).attr( 'src', '/icons/true.png' );
+			}
+		}
+
+		function facetAdd ( self ) {
+			console.log( self );
+			var field = $( self ).val();
+			var id = 'facet_' + field;
+			if ( $( '#' + id ).length ) {   // don't add a duplicate
+				$( "#selectorFacet" ).val( 'Select' );  // reset the selector drop-down to the top "Select..." options
+				return;
+			}
+			var html = '<div facet=' + field + ' id=' + id + ' style="border:0;margin:0;padding:0;border-radius:3px">';
+			html += '<div style="background-color:#e0e0e0;border-width:1px 0px 1px 0px;border-style:solid;border-color:#a0a0a0;margin:5px 0px 0px 0px;padding:3px 3px 3px 3px">' + field;
+			html += '<img src=/icons/application_windows_remove.png style="float:right;padding:2px 3px 0px 0px;height:12px;" onClick="removeParentFacet(this)">';
+			html += '<img id=facet_window_' + field + ' src=/icons/collapse.png style="float:right;padding-right:3px" onClick="toggleWindowParent(this)">';
+			html += '</div>';
+			html += '<div id=facet_table_' + field + ' style="padding:3px;max-height:300px;overflow-x:hidden;overflow-y:auto">Facet Table</div>';
+			html += '</dvi>';
+			$( '#facets' ).append( html );
+			$( "#selectorFacet" ).val( 'Select' );  // reset the selector drop-down to the top "Select..." options
+			searchFacet( field );
+		}
+
+		function removeParentFacet ( self ) {
+			$( self ).closest( "[facet]" ).remove();
+		}
+
+		function removeParentFilter ( self ) {
+			$( self ).closest( "[filter]" ).remove();
+		}
+
+		function collapseParent ( self ) {
+			var facet = $( self ).closest( "[facet]" ).attr( 'facet' );
+			//console.log(facet);
+			$( '#facet_table_' + facet ).css( { display: 'none' } );
+		}
+
+		function toggleWindowParent ( self ) {
+			var src = $( self ).attr( 'src' );
+			var id = $( self ).attr( 'id' );
+			//console.log(src);
+			var display;
+			if ( src.match( /collapse/ ) ) {
+				//console.log('collapsing');
+				display = 'none';
+				$( self ).attr( 'src', '/icons/expand.png' )
+			}
+			else {
+				//console.log('expanding');
+				$( self ).attr( 'src', '/icons/collapse.png' );
+				display = 'block';
+			}
+			var facet = $( self ).closest( "[facet]" ).attr( 'facet' );
+			//console.log(facet);
+			var targetId = id.replace( /^facet_window_/, 'facet_table_' );
+			//console.log(targetId);
+			$( '#' + targetId ).css( { display: display } );
+		}
+
+		function expandParent ( self ) {
+			var facet = $( self ).closest( "[facet]" ).attr( 'facet' );
+			//console.log(facet);
+			$( '#facet_table_' + facet ).css( { display: 'block' } );
+		}
+
+		function popUpOpen ( id ) {
+			var bodyWidth = $( 'html' ).outerWidth( true );
+			var bodyHeight = $( 'html' ).outerHeight( true );
+			var popUpUnderlay = $( '<div id=popUpUnderlay></div>' );
+			popUpUnderlay.css( { border: 'none', backgroundColor: 'black', opacity: 0.3, width: bodyWidth + 'px', height: bodyHeight + 'px', left: '0px', top: '0px', zIndex: 999900, position: 'absolute' } );
+			$( 'body' ).append( popUpUnderlay );
+			popUpUnderlay.on( 'click', function () { $( '#popUpUnderlay' ).remove(); $( '#popUp' ).remove(); } );
+
+			var offset = $( '#results' ).offset();
+			var width = $( '#results' ).innerWidth();
+			var height = $( '#results' ).innerHeight();
+			//console.log(offset);
+			var div = $( '<div id=popUp></div>' );
+			$( 'body' ).append( div );
+			$( div ).css( { left: offset.left + 100 + 'px', top: offset.top + 100 + 'px', border: '1px solid black', borderRadius: '10px', padding: 0, margin: 0, backgroundColor: '#ffffff', opacity: 1.0, position: 'absolute', zIndex: 999950, width: width - 200, height: height - 200 } );
+			$( div ).append( '<div style="background-color:#e0e0e0;height:14px;width:(100% - 10px);border-radius:10px 10px 0px 0px;padding:5px;font-weight:bold" onClick="popUpClose()">CLOSE</div>' );
+			var html = '<table style="height:auto;width:100%;margin:10px;padding:0;border:0;overflow-x:hidden;overflow-y:auto">';
+			for ( var f in resultsByID[id] ) {
+				if ( f.match( /^SNIPPET/ ) ) { continue }
+				html += '<tr>';
+				html += '<td style="padding:5px">';
+				html += f;
+				html += '</td>';
+				html += '<td style="padding:5px">';
+				html += resultsByID[id][f];
+				html += '</td>';
+				html += '</tr>';
+			}
+			html += '</table>';
+			$( div ).append( html );
+		}
+
+		function popUpClose () {
+			$( '#popUp' ).remove();
+			$( '#popUpUnderlay' ).remove();
+		}
+
+		function getDeep ( obj, path, create ) {
+			if ( path == null ) { return }
+			let parts = path.split( /\./ );
+			//logHandle.log(parts);
+			for ( let p in parts ) {
+				if ( typeof ( obj[parts[p]] ) == 'undefined' ) {
+					if ( create == null || !create ) {
+						return
+					}
+					else {
+						obj[parts[p]] = {};
+						obj = obj[parts[p]];
+					}
+				}
+				else if ( obj[parts[p]] == null ) {
+					return;	// undefined
+				}
+				else if ( typeof ( obj[parts[p]] ) == 'object' ) {
+					obj = obj[parts[p]];
+				}
+				else {
+					//logHandle.log('Returning value');
+					// but for this service, we want aqn object with the last key
+					let o = {};
+					o[parts[p]] = obj[parts[p]];
+					return o;
+				}
+			}
+			return obj;
+		}
+
+		function setDeep ( obj, path, value ) {
+			console.log( 'setDeep: ' + path )
+			console.log( obj );
+			console.log( value );
+			if ( path == null ) { return }
+			let parts = path.split( /\./ );
+			let last = parts.pop();
+			//logHandle.log(parts);
+			let o = obj;
+			for ( let i = 0; i < parts.length; ++i ) {
+				console.log( parts[i] );
+				if ( o[parts[i]] == null ) { o[parts[i]] = {} }
+				o = o[parts[i]];
+			}
+			o[last] = value;
+		}
+
+		var panelTitles = ["Prompts", "Raw Prompt Result", "Parsed Prompt Result", "Map", "Site Jump"];
+		//var panelTitles = [ "Boeing Capital Corporation","Commercial Airplanes","Defense, Space &amp; Security","Global Services","Boeing International","Communications","Corporate","Engineering, Test &amp; Technology","Finance, Enterprise Performance &amp; Strategy","Government Operations","Human Resources","Information Technology &amp; Data Analytics","Law","Manufacturing, Supply Chain &amp; Operations","Office of Internal Governance &amp; Administration","More Info..." ];
+
+		function panelClone () {
+			let obj = $.extend( {}, panelTemplate );
+			if ( !panels.byId ) { panels.byId = {} }
+			for ( var i in panelTitles ) {
+				panels.items[i] = {};
+				$.extend( true, panels.items[i], obj );
+				var title = panelTitles[i];
+				panels.items[i].id = title.replace( /\W/g, '_' ).replace( /__/g, '_' );
+				panels.items[i].title = title;
+				panels.byId[panels.items[i].id] = panels.items[i];
+			}
+			console.log( panels );
+		}
+
+		var headerHeight = 30;
+
+		var menu = [
+			{
+				id: 'goToPanel',
+				value: '<b><span style="background:transparent;color:black">Go To Panel</span></b>',
+				func: displayPanelDropDown
+			}
+		];
+
+		function menuInit ( target, menu ) {
+			for ( var i in panelTitles ) {
+				var title = panelTitles[i];
+				var id = title.replace( /\W/g, '_' ).replace( /__/g, '_' );
+				menu.push( { id: id, value: title, on: { click: Function( "gotoPanelById('" + id + "')" ) } } );
+			}
+			for ( var i in menu ) {
+				var item = $( '<div style="border-radius:3px;background-color:purple;margin:2px 0px 2px 0px;padding:2px 4px 2px 4px;color:white;font-size:70%">' + menu[i].value + '</div>' );
+				$( item ).hover(
+					function () { $( this ).css( { backgroundColor: 'green' } ) },
+					function () { $( this ).css( { backgroundColor: 'purple' } ) }
+				);
+				for ( var evtName in menu[i].on ) {
+					$( item ).on( evtName, menu[i].on[evtName] );
+				}
+				$( target ).append( item );
+			}
+		}
+
+		function displayPanelDropDown ( self ) {
+			console.log( self );
+			var popUpUnderlay = $( '<div id=popUpUnderlay></div>' );
+			popUpUnderlay.css( { border: 'none', 'backgroundColor': 'transparent', opacity: 0.0, width: '100%', height: '100%', left: '0px', top: '0px', zIndex: 999900, position: 'absolute' } );
+			$( 'body' ).append( popUpUnderlay );
+			popUpUnderlay.on( 'mouseover', function () { $( '#popUpUnderlay' ).remove(); $( '#popUpGoToPanel' ).remove(); } );
+
+			var offset = $( self ).offset();
+			var width = 'auto';
+			var height = 'auto';
+			//console.log(offset);
+			var div = $( '<div id=popUpGoToPanel></div>' );
+			$( 'body' ).append( div );
+			$( div ).css( { maxSize: '400px', padding: '3px', fontSize: '70%', backgroundColor: 'purple', color: 'white', borderRadius: '5px', left: offset.left + 'px', top: offset.top + 'px', border: 'solid black 1px', margin: 0, position: 'absolute', zIndex: 999950, width: width, height: height, maxWidth: width, maxHeight: height, overflowX: 'hidden', overflowY: 'auto' } );
+			//$(div).css({left:offset.left+'px',top:offset.top+'px',border:0,margin:0,padding:(width/4)+'px',backgroundColor:'#dddddd44',position:'absolute',zIndex:999950,width:width,height:height});
+			for ( var i in panelTitles ) {
+				var title = panelTitles[i];
+				var id = title.replace( /\W/g, '_' ).replace( /__/g, '_' );
+				var menuItem = $( '<div id=menu_' + id + '>' + title + '</div>' );
+				$( menuItem ).attr( 'panel_id', id );
+				$( menuItem ).hover(
+					function () { $( this ).css( { backgroundColor: 'green' } ) },
+					function () { $( this ).css( { backgroundColor: 'purple' } ) }
+				);
+				$( menuItem ).click( function () { gotoPanel( this ); $( '#popUpUnderlay' ).remove(); $( '#popUpGoToPanel' ).remove(); } );
+				$( '#popUpGoToPanel' ).append( menuItem );
+			}
+		}
+
+		function gotoPanelById ( panelId ) {
+			console.log( panelId );
+			var $left = $( '#' + panelId + '_left' );
+			var left = $left.get( 0 );
+			panelToggle( left );
+		}
+
+		function gotoPanel ( self ) {
+			var panelId = $( self ).attr( 'panel_id' );
+			console.log( panelId );
+			var $left = $( '#' + panelId + '_left' );
+			var left = $left.get( 0 );
+			panelToggle( left );
+		}
+
+		function panelCenter ( obj ) {
+			//console.log(typeof(obj));
+			var panelId;
+			if ( typeof ( obj ) == 'string' ) {
+				panelId = obj;
+			}
+			else if ( typeof ( obj ) == 'object' ) { // came in from a jQuery .on('click') function so pull the panelId out
+				//console.log(obj.target);
+				$( obj.target ).closest( '[panel_type="container"]' ).each( function () {
+					console.log( this );
+					panelId = $( this ).attr( 'panel_id' );
+				} );
+			}
+			//console.log(panelId);
+			var $container = $( '#' + panelId + '_container' );
+			var $left = $( '#' + panelId + '_left' );
+			var left = ( $left.get( 0 ) );
+			var offset = $( '#panelsContainer' ).offset();
+			var dimPanels = { top: offset.top, left: offset.left, width: $( '#panelsContainer' ).innerWidth(), height: $( '#panelsContainer' ).innerHeight() };
+			//console.log(dimPanels);
+			offset = $container.offset();
+			var dimContainer = { top: offset.top, left: offset.left, width: $container.innerWidth(), height: $container.innerHeight() };
+			//console.log(dimContainer);
+			var $rail = $( '.ps__rail-x' );
+			var $thumb = $( '.ps__thumb-x' );
+			var elmnt = document.getElementById( "panelsContainer" );
+			var centerOfPanelsContainer = ( dimPanels.width / 2 ) + dimPanels.left;
+			//console.log('centerOfPanelsContainer='+centerOfPanelsContainer);
+			var newLeftOfPanel = centerOfPanelsContainer - ( dimContainer.width / 2 );
+			if ( newLeftOfPanel < 0 ) { newLeftOfPanel = 0 }
+			//console.log('newLeftOfPanel='+newLeftOfPanel);
+			var disanceToScrollLeft = dimContainer.left - newLeftOfPanel;
+			//console.log('disanceToScrollLeft='+disanceToScrollLeft);
+			var currentScrollLeft = $( elmnt ).scrollLeft();
+			//console.log('currentScrollLeft='+currentScrollLeft);
+			$( elmnt ).animate( { scrollLeft: disanceToScrollLeft + currentScrollLeft }, 250, function () { resizePanelsWidth(); perfectScrollbar.update(); } );
+			//elmnt.scrollLeft = disanceToScrollLeft;
+		}
+
+		function panelsInit ( target, config, orientation ) {
+			if ( orientation == null ) { orientation = config.orientation }
+			for ( var i in config.items ) {
+				var panel = config.items[i];
+				var p1 = $( '<div panel_type=left><img src=/icons/arrow_left_white.svg style="transform:rotate(135deg);height:24px;padding:3px" onClick="panelToggle(this)"><span style="height:100%;margin-top:4px;vertical-align:top;line-height:' + headerHeight + 'px">' + panel.title + '</span></div>' );
+				$( p1 ).attr( 'id', panel.id + '_left' );
+				$( p1 ).attr( 'panel_id', panel.id );
+				console.log( panel.css );
+				var css1 = {};  //$.extend({},panel.css);   // don't use this until you have good info in it, it crashes IE
+				$.extend( true, css1, panel[orientation].css.title.base );
+				$.extend( true, css1, {
+					borderRadius: '5px', display: 'inline-block', height: 'calc(100% - 4px)', width: '30px', margin: '0px 0px 4px 0px', padding: 0, overflow: 'hidden',
+					textOrientation: 'sideways', writingMode: 'vertical-rl', verticalAlign: 'baseline'
+				} ); // ,transform:'rotate(90deg)',transformOrigin:'left top 0'
+				$( p1 ).css( css1 );
+				//$(p1).text(panel.title);
+				$( target ).append( p1 );
+
+				var p2 = $( '<div panel_type=container></div>' );
+				$( p2 ).attr( 'id', panel.id + '_container' );
+				$( p2 ).attr( 'panel_id', panel.id );
+				var css2 = {}; //$.extend({},panel.css);
+				$.extend( true, css2, panel[orientation].css.title.base );
+				$.extend( true, css2, { display: 'inline-block', height: '100%', width: '0px', margin: '5px 0px 0px 0px', padding: '0', overflow: 'hidden', backgroundColor: 'transparent' } );
+				//$.extend(true,css2,{display:'inline-block',height:'100%',width:panel[orientation].width.maximum,margin:'5px 5px 0px 0px',padding:'0',overflow:'hidden',backgroundColor:'transparent'});
+				$( p2 ).css( css2 );
+				$( target ).append( p2 );
+
+				// Add resizer bar here
+				var pr = $( '<div panel_type=resizer></div>' );
+				$( pr ).attr( 'id', panel.id + '_resizer' );
+				$( pr ).attr( 'panel_id', panel.id );
+				var css2 = {}; //$.extend({},panel.css);
+				$.extend( true, css2, panel[orientation].css.title.base );
+				$.extend( true, css2, { display: 'inline-block', height: '100%', width: `${resizerWidth}px`, margin: '5px 0px 0px 0px', padding: '0', overflow: 'hidden', backgroundColor: 'transparent' } );
+				//$.extend(true,css2,{display:'inline-block',height:'100%',width:panel[orientation].width.maximum,margin:'5px 5px 0px 0px',padding:'0',overflow:'hidden',backgroundColor:'transparent'});
+				$( pr ).css( css2 );
+				$( pr ).css( { zIndex: 9999 } );
+				$( target ).append( pr );
+
+				var p3 = $( '<div panel_type=header><img src=/icons/arrow_left_white.svg style="transform:rotate(-45deg);height:24px;padding:3px" onClick="panelToggle(this)"><span style="height:100%;margin-left:4px;vertical-align:top;line-height:' + headerHeight + 'px">' + panel.title + '</span></div>' );
+				$( p3 ).attr( 'id', panel.id + '_header' );
+				var css3 = {}; //$.extend({},panel.css);
+				$.extend( true, css3, panel[orientation].css.title.base );
+				$.extend( true, css3, { borderRadius: '5px 0px 0px 0px', border: 0, display: 'block', height: headerHeight + 'px', width: '100%', margin: '0', padding: '0', overflow: 'hidden' } );
+				$( p3 ).css( css3 );
+				p2.append( p3 );
+				$( p3 ).on( 'click', panelCenter );
+
+				var p4 = $( '<div panel_type=content></div>' );
+				$( p4 ).attr( 'id', panel.id + '_content' );
+				var css4 = {}; //$.extend({},panel.css);
+				$.extend( true, css4, panel[orientation].css.content.base );
+				$.extend( true, css4, { borderRadius: '0px 0px 5px 5px', borderWidth: '0px 2px 2px 2px', borderColor: 'blue', borderStyle: 'solid', display: 'block', height: 'calc(100% - ' + ( headerHeight + 6 ) + 'px)', width: 'calc(100% - 4px)', margin: '0', padding: '0', overflow: 'hidden', backgroundColor: '#888888' } );
+				$( p4 ).css( css4 );
+				p2.append( p4 );
+				$( p4 ).html( "one<br>two<br>three<br>four<br>" );
+			}
+		}
+
+		function panelToggle ( self ) { // var thisTopCount = $(self).closest('tr').find("[topcount]").val();
+			console.log( self );
+			var $parent = $( self ).closest( "[panel_id]" );
+			var panelId = $parent.attr( "panel_id" );
+			var id = $parent.attr( 'id' );
+			console.log( panelId + ' ' + id );
+			let resizer = $parent.siblings( `#${panelId}_resizer` )[0];
+			console.log( resizer );
+			if ( id.match( /_left$/ ) ) {
+				console.log( $( '#' + panelId + '_container' ).width() );
+				if ( !$( '#' + panelId + '_container' ).width() ) {
+					$parent.css( { width: '0px' } );
+					$( '#' + panelId + '_container' ).css( { width: '30px' } );
+					$( '#' + panelId + '_content' ).css( { height: 'calc(100% - ' + ( headerHeight + 6 ) + 'px)', marginTop: '0px' } );
+					$( '#' + panelId + '_header' ).css( { height: '30px' } );
+					$( '#' + panelId + '_container' ).animate( { width: '500px' }, {
+						duration: 250, complete: function () {    // the stuff to do after animation complete that are dependent on the panel being of the size at rest
+							panelCenter( panelId );
+							resizePanelsWidth();
+							perfectScrollbar.update()
+						}
+					} );
+					// find resizer
+					$(resizer).mouseover( function () {
+						$( this ).css( "background-color", "gray" );
+					} ).mouseout( function () {
+						$( this ).css( "background-color", "red" );
+					} );
+					$(resizer).draggable( {
+						containment: "#panelsContainer",
+						drag: function () { }
+					} );
+
+				}
+				else {
+					panelCenter( panelId );
+					resizePanelsWidth();
+					perfectScrollbar.update()
+				}
+			}
+			else if ( id.match( /_container$/ ) ) {
+				console.log( $( '#' + panelId + '_container' ).width() );
+				$( '#' + panelId + '_left' ).css( { width: '30px', borderRadius: '5px 0px 0px 5px' } );
+				$( '#' + panelId + '_header' ).css( { height: '0px' } );
+				$parent.css( { width: '470px' } );
+				$( '#' + panelId + '_content' ).css( { height: '100%', marginTop: headerHeight + 'px' } );
+				$(resizer).off();
+				$(resizer).draggable( "destroy" );
+				$(resizer).css('background-color','transparent');
+				$parent.animate( { width: '0px' }, {
+					duration: 250, complete: function () {    // the stuff to do after animation complete that are dependent on the panel being of the size at rest
+						$( '#' + panelId + '_left' ).css( { borderRadius: '5px 5px 5px 5px' } );
+					}
+				} );
+				resizePanelsWidth();
+				perfectScrollbar.update();
+			}
+		}
+
+		// recalculate the panels width to a hard px value since auto isn't working
+		function resizePanelsWidth () {
+			var panelsWidth = 0;
+			$( '#panels' ).children( '*' ).each( function () {
+				//console.log(this);
+				var outerWidth = $( this ).outerWidth( true );
+				//console.log(outerWidth);
+				panelsWidth += outerWidth;
+			} );
+			console.log( 'panelsWidth=' + panelsWidth );
+			$( '#panels' ).css( { width: panelsWidth + 'px' } );
+		}
+
+		function resizeBody ( navSizeSet ) {
+			$( 'html' ).css( { height: '100%', width: '100%', margin: 0, padding: 0, overflow: 'hidden' } );
+			$( 'body' ).css( { height: '100%', width: '100%', margin: 0, padding: 0, overflow: 'hidden' } );
+			$( '#header' ).css( { width: '100%', height: headerSize + 'px', padding: 0, margin: '0px 0px ' + headerMargin + 'px 0px', backgroundColor: 'lightgreen', overflow: 'hidden', boxShadow: '0px 1px ' + headerMargin + 'px rgba(0, 0, 0, 0.3)', verticalAlign: 'middle' } );
+			$( '#footer' ).css( { width: '100%', height: footerSize + 'px', padding: 0, margin: footerMargin + 'px 0px 0px 0px', backgroundColor: 'pink', overflow: 'hidden', verticalAlign: 'middle' } );
+			$( '#main' ).css( { width: '100%', height: 'calc(100% - ' + ( headerSize + headerMargin + footerSize + footerMargin ) + 'px', padding: '0px 5px 0px 0px', margin: 0, backgroundColor: 'transparent', overflow: 'hidden', whiteSpace: 'nowrap' } );
+			$( '#ribbon' ).css( { width: '200px', height: 'calc(100% - 0px)', padding: '0px 0px 0px 5px', margin: 0, backgroundColor: 'lightblue', position: 'relative', overflow: 'hidden', whiteSpace: 'nowrap', display: 'inline-block' } );
+			//$('#ribbon').css({width:'100px',height:'calc(100% - 8px)',borderRadius:'5px',border:'1px solid black',padding:'0px 5px 0px 5px',margin:0,backgroundColor:'lightblue',position:'relative',overflow:'hidden',whiteSpace:'nowrap',display:'inline-block'});
+			var panelContainerWidth = $( '#main' ).innerWidth() - $( '#ribbon' ).outerWidth( true );
+			$( '#panelsContainer' ).css( { width: panelContainerWidth + 'px', height: '100%', padding: 0, margin: 0, backgroundColor: 'yellow', position: 'relative', overflow: 'hidden', whiteSpace: 'nowrap', display: 'inline-block' } );
+			$( '#panels' ).css( { width: 'auto', height: '100%', padding: '0px 0px 0px 5px', margin: 0, backgroundColor: 'lightblue', position: 'relative', overflow: 'visible', whiteSpace: 'nowrap', display: 'inline-block' } );
+			// find all the panel type of left and reset the height to calc(100% - 4px) because of a bug, calc'd sizes don't get redone when the window resizes
+			$( '#panels' ).find( '[panel_type="left"]' ).each( function () {
+				console.log( this );
+				$( this ).css( { height: '0px' } );    // need to force a resize to trigger the calc to actually happen
+				$( this ).css( { height: 'calc(100% - 4px)' } );
+			} );
+			resizePanelsWidth();
+			perfectScrollbar.update();
+		}
+
+		function resizeDrag ( event, ui ) {
+			//console.log(ui);
+			ui.position.top = headerSize + headerMargin;
+			if ( ui.position.left < navSizeMin ) { ui.position.left = navSizeMin }
+			if ( ui.position.left > ( $( 'body' ).innerWidth() / 2 ) ) { ui.position.left = Math.floor( $( 'body' ).innerWidth / 2 ) }
+			resizeBody( ui.position.left - 5 );
+		}
+
+		var panelTemplate = {
+			id: 'panel1',
+			title: 'Panel 1',
+			state: {
+				initial: 'maximum', //prefered, minimum, maximum, closed
+				current: 'maximum' //prefered, minimum, maximum, closed
+			},
+			icon: '',
+			css: {
+				content: { fontSize: '12px' }, // base for all panels, changes for desktop or mobile pixel density
+				title: { fontSize: '12px' }, // base for all panels, changes for desktop or mobile pixel density
+			},
+			horizontal: {
+				css: {
+					content: {
+						base: { color: 'white', backgroundColor: 'blue' },
+						open: {},
+						closed: {}
+					},
+					title: {
+						base: { color: 'white', backgroundColor: 'blue' },
+						open: {},
+						closed: {}
+					}
+				},
+				width: {
+					preferred: 'auto',
+					maximum: '400px',
+					minimum: '100px',
+					current: '',
+				},
+				height: {
+					preferred: '100%',
+					maximum: '100%',
+					minimum: 'auto',
+					current: '',
+				}
+			}
+		}
+
+		var panels = {
+			orientation: 'horizontal',
+			items: [
+			]
+		};
+
+		$( document ).ready( function () {
+			fetchSession();
+			perfectScrollbar = new PerfectScrollbar( '#panelsContainer', { wheelSpeed: 2, wheelPropagation: true, minScrollbarLength: 20, useBothWheelAxes: true, suppressScrollY: true } );
+			resizeBody();
+			panelClone();   // temp function to create eight panels from the one in the template
+			panelsInit( '#panels', panels, 'horizontal' );
+			menuInit( '#ribbon', menu );
+			resizePanelsWidth(); perfectScrollbar.update();
+			perfectScrollbar.update();
+		} );
+
+	</script>
+</head>
+
+<body onResize="resizeBody()" style="display:block;height:100%;width:100%">
+	<header id=header>
+		<table style="width:100%;height:100%;font-size:60%">
+			<tr>
+				<td style="vertical-align:middle;width:33%; padding:11px 0px 0px 10px"><img src=/image/boeing_logo.png></td>
+				<td style="text-align:center; width:33%; font-size:140%">Grok Based Prompt Testing</td>
+				<td style="text-align:right; width:33%; padding:0px 10px 0px 0px; height:40px">
+					<!--<div style="display:inline-block" id="profile-info"><small id="welcome">Welcome,</small><br> <span id="desktopUsername">Anonymous User!</span></div>-->
+					<!--<div style="display:inline-block" id="profile-image"><img id=thumbnailPhoto style="height:40px;padding:0px 0px 0px 10px" src="/image/user_shadow.jpg"></div>-->
+				</td>
+			</tr>
+		</table>
+	</header>
+	<main id=main>
+		<navigation id=ribbon>
+		</navigation>
+		<div id=panelsContainer>
+			<div id=panels>
+			</div>
+		</div>
+	</main>
+	<footer id=footer>
+		<table style="width:100%;height:100%;font-size:60%">
+			<tr>
+				<td style="vertical-align:top;width:33%;">Footer left</td>
+				<td style="vertical-align:top;width:33%;text-align:center">Footer Center</td>
+				<td style="vertical-align:top;width:33%;text-align:right">Footer Right</td>
+			</tr>
+		</table>
+	</footer>
+</body>
+
+</html>
