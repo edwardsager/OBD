@@ -1501,6 +1501,7 @@
 		}
 
 		var panelTitles = ["Prompts", "Raw Prompt Result", "Parsed Prompt Result", "Map", "Site Jump"];
+		let panelSizes = {};
 		//var panelTitles = [ "Boeing Capital Corporation","Commercial Airplanes","Defense, Space &amp; Security","Global Services","Boeing International","Communications","Corporate","Engineering, Test &amp; Technology","Finance, Enterprise Performance &amp; Strategy","Government Operations","Human Resources","Information Technology &amp; Data Analytics","Law","Manufacturing, Supply Chain &amp; Operations","Office of Internal Governance &amp; Administration","More Info..." ];
 
 		function panelClone () {
@@ -1522,7 +1523,7 @@
 		var menu = [
 			{
 				id: 'goToPanel',
-				value: '<b><span style="background:transparent;color:black">Go To Panel</span></b>',
+				value: '<b><span style="background:transparent;color:white" onClick="displayPanelDropDown(null,true)">Open All Panels</span></b>',
 				func: displayPanelDropDown
 			}
 		];
@@ -1544,10 +1545,23 @@
 				}
 				$( target ).append( item );
 			}
+			displayPanelDropDown();
 		}
 
-		function displayPanelDropDown ( self ) {
+		function displayPanelDropDown ( self, all ) {
 			console.log( self );
+			if (! self) {
+				for ( var i = panelTitles.length-1;i >= 0;--i) {
+					var title = panelTitles[i];
+					var id = title.replace( /\W/g, '_' ).replace( /__/g, '_' );
+					let open = localStorage.getItem(id+'_open');
+					console.log(open,typeof open);
+					if (all || open?.match(/true/)) {
+						gotoPanelById(id);
+					}
+				}
+				return;
+			}
 			var popUpUnderlay = $( '<div id=popUpUnderlay></div>' );
 			popUpUnderlay.css( { border: 'none', 'backgroundColor': 'transparent', opacity: 0.0, width: '100%', height: '100%', left: '0px', top: '0px', zIndex: 999900, position: 'absolute' } );
 			$( 'body' ).append( popUpUnderlay );
@@ -1588,6 +1602,14 @@
 			var $left = $( '#' + panelId + '_left' );
 			var left = $left.get( 0 );
 			panelToggle( left );
+		}
+
+		function panelClose ( self ) {
+			var panelId = $( self ).attr( 'panel_id' );
+			console.log( panelId );
+			var $container = $( '#' + panelId + '_container' );
+			var container = $container.get( 0 );
+			panelToggle( container );
 		}
 
 		function panelCenter ( obj ) {
@@ -1652,7 +1674,7 @@
 				$( p2 ).attr( 'panel_id', panel.id );
 				var css2 = {}; //$.extend({},panel.css);
 				$.extend( true, css2, panel[orientation].css.title.base );
-				$.extend( true, css2, { display: 'inline-block', height: '100%', width: '0px', margin: '5px 0px 0px 0px', padding: '0', overflow: 'hidden', backgroundColor: 'transparent' } );
+				$.extend( true, css2, { position: 'relative', display: 'inline-block', height: '100%', width: '0px', margin: '5px 0px 0px 0px', padding: '0', overflow: 'hidden', backgroundColor: 'transparent' } );
 				//$.extend(true,css2,{display:'inline-block',height:'100%',width:panel[orientation].width.maximum,margin:'5px 5px 0px 0px',padding:'0',overflow:'hidden',backgroundColor:'transparent'});
 				$( p2 ).css( css2 );
 				$( target ).append( p2 );
@@ -1663,7 +1685,7 @@
 				$( pr ).attr( 'panel_id', panel.id );
 				var css2 = {}; //$.extend({},panel.css);
 				$.extend( true, css2, panel[orientation].css.title.base );
-				$.extend( true, css2, { display: 'inline-block', height: '100%', width: `${resizerWidth}px`, margin: '5px 0px 0px 0px', padding: '0', overflow: 'hidden', backgroundColor: 'transparent' } );
+				$.extend( true, css2, { position: 'relative', display: 'inline-block', height: '100%', width: `${resizerWidth}px`, margin: '5px 0px 0px 0px', padding: '0', overflow: 'hidden', backgroundColor: 'transparent' } );
 				//$.extend(true,css2,{display:'inline-block',height:'100%',width:panel[orientation].width.maximum,margin:'5px 5px 0px 0px',padding:'0',overflow:'hidden',backgroundColor:'transparent'});
 				$( pr ).css( css2 );
 				$( pr ).css( { zIndex: 9999 } );
@@ -1682,7 +1704,7 @@
 				$( p4 ).attr( 'id', panel.id + '_content' );
 				var css4 = {}; //$.extend({},panel.css);
 				$.extend( true, css4, panel[orientation].css.content.base );
-				$.extend( true, css4, { borderRadius: '0px 0px 5px 5px', borderWidth: '0px 2px 2px 2px', borderColor: 'blue', borderStyle: 'solid', display: 'block', height: 'calc(100% - ' + ( headerHeight + 6 ) + 'px)', width: 'calc(100% - 4px)', margin: '0', padding: '0', overflow: 'hidden', backgroundColor: '#888888' } );
+				$.extend( true, css4, { borderRadius: '0px 0px 5px 5px', borderWidth: '0px 2px 2px 2px', borderColor: 'blue', borderStyle: 'solid', display: 'block', height: 'calc(100% - ' + ( headerHeight + 6 ) + 'px)', width: 'calc(100% - 4px)', margin: '0px 4px 0px 0px', padding: '0', overflow: 'hidden', backgroundColor: '#888888' } );
 				$( p4 ).css( css4 );
 				p2.append( p4 );
 				$( p4 ).html( "one<br>two<br>three<br>four<br>" );
@@ -1691,35 +1713,69 @@
 
 		function panelToggle ( self ) { // var thisTopCount = $(self).closest('tr').find("[topcount]").val();
 			console.log( self );
-			var $parent = $( self ).closest( "[panel_id]" );
-			var panelId = $parent.attr( "panel_id" );
-			var id = $parent.attr( 'id' );
+			var parent = $( self ).closest( "[panel_id]" );
+			var panelId = parent.attr( "panel_id" );
+			var id = parent.attr( 'id' );
 			console.log( panelId + ' ' + id );
-			let resizer = $parent.siblings( `#${panelId}_resizer` )[0];
+			let resizer = $( `#${panelId}_resizer` );
+			let container = $( `#${panelId}_container` );
 			console.log( resizer );
 			if ( id.match( /_left$/ ) ) {
-				console.log( $( '#' + panelId + '_container' ).width() );
-				if ( !$( '#' + panelId + '_container' ).width() ) {
-					$parent.css( { width: '0px' } );
-					$( '#' + panelId + '_container' ).css( { width: '30px' } );
+				console.log( container.width() );
+				if ( !container.width() ) {
+					parent.css( { width: '0px' } );
+					container.css( { width: '30px' } );
 					$( '#' + panelId + '_content' ).css( { height: 'calc(100% - ' + ( headerHeight + 6 ) + 'px)', marginTop: '0px' } );
 					$( '#' + panelId + '_header' ).css( { height: '30px' } );
-					$( '#' + panelId + '_container' ).animate( { width: '500px' }, {
+					let panelWidth = localStorage.getItem(panelId+'_width');
+					console.log(panelWidth);
+					if (! panelWidth) {
+						panelWidth = '500px'
+					}
+					console.log(panelWidth);
+					container.animate( { width: panelWidth }, {
 						duration: 250, complete: function () {    // the stuff to do after animation complete that are dependent on the panel being of the size at rest
 							panelCenter( panelId );
 							resizePanelsWidth();
 							perfectScrollbar.update()
 						}
 					} );
+					localStorage.setItem(panelId+'_open',true);
 					// find resizer
-					$(resizer).mouseover( function () {
+					$( resizer ).mouseover( function () {
 						$( this ).css( "background-color", "gray" );
 					} ).mouseout( function () {
-						$( this ).css( "background-color", "red" );
+						$( this ).css( "background-color", "transparent" );
 					} );
-					$(resizer).draggable( {
+					$( resizer ).draggable( {
 						containment: "#panelsContainer",
-						drag: function () { }
+						helper: 'clone',
+						cursor:'col-resize',
+						drag: function ( ev, ui ) {
+							console.log( panelId );
+							//let tl = parseInt( $( ev.target ).offset().left );
+							let tl = ui.offset.left;
+							let pl = parseInt( parent.offset().left );
+							let w = tl - pl - 0;
+							if ( tl >= pl + 50 ) { // no thinner than 50px
+								console.log( ui );
+								console.log( `tl=${tl}, pl=${pl}, w=${w}` );
+								console.log( 'container width before set=' + container.width() );
+								container.css( { width: w + 'px' } );
+								localStorage.setItem(panelId+'_width',w+'px');
+								// console.log( 'container width after set with w =' + container.width() );
+								console.log( pl + w );
+								resizer.offset( { left: ui.offset.left } );
+								console.log( `target offset after setting to pl=${pl} + w=${w} =` + resizer.offset().left, ui.offset.left, $( `#${panelId}_resizer` ).offset().left );
+								resizePanelsWidth();
+								perfectScrollbar.update()
+							}
+						},
+						stop: function ( ev, ui ) {
+							panelCenter( panelId );
+							resizePanelsWidth();
+							perfectScrollbar.update()
+						}
 					} );
 
 				}
@@ -1730,19 +1786,20 @@
 				}
 			}
 			else if ( id.match( /_container$/ ) ) {
-				console.log( $( '#' + panelId + '_container' ).width() );
+				console.log( container.width() );
 				$( '#' + panelId + '_left' ).css( { width: '30px', borderRadius: '5px 0px 0px 5px' } );
 				$( '#' + panelId + '_header' ).css( { height: '0px' } );
-				$parent.css( { width: '470px' } );
+				parent.css( { width: '470px' } );
 				$( '#' + panelId + '_content' ).css( { height: '100%', marginTop: headerHeight + 'px' } );
-				$(resizer).off();
-				$(resizer).draggable( "destroy" );
-				$(resizer).css('background-color','transparent');
-				$parent.animate( { width: '0px' }, {
+				$( resizer ).off();
+				$( resizer ).draggable( "destroy" );
+				$( resizer ).css( 'background-color', 'transparent' );
+				parent.animate( { width: '0px' }, {
 					duration: 250, complete: function () {    // the stuff to do after animation complete that are dependent on the panel being of the size at rest
 						$( '#' + panelId + '_left' ).css( { borderRadius: '5px 5px 5px 5px' } );
 					}
 				} );
+				localStorage.setItem(panelId+'_open',false);
 				resizePanelsWidth();
 				perfectScrollbar.update();
 			}
@@ -1883,4 +1940,3 @@
 </body>
 
 </html>
-
